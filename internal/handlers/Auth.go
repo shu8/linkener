@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"crypto/rand"
-	"url-shortener/internal/db"
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"url-shortener/internal/db"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
@@ -69,12 +69,12 @@ func editUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt, err := db.DBCon.Prepare("update users set password=? where username=?")
-	defer stmt.Close()
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to update user", http.StatusInternalServerError)
 		return
 	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec(string(hashedPassword), requestUsername)
 	if err != nil {
@@ -103,20 +103,20 @@ func newUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt, err := db.DBCon.Prepare("select username from users where username=?")
-	defer stmt.Close()
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to authenticate user", http.StatusInternalServerError)
 		return
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.Query(decodedBody.Username)
-	defer rows.Close()
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to add new user", http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
 
 	if rows.Next() {
 		http.Error(w, "User already exists", http.StatusConflict)
@@ -131,12 +131,12 @@ func newUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt, err = db.DBCon.Prepare("insert into users(username, password) values(?, ?)")
-	defer stmt.Close()
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to add new user", http.StatusInternalServerError)
 		return
 	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec(decodedBody.Username, string(hashedPassword))
 	if err != nil {
@@ -165,12 +165,12 @@ func generateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt, err := db.DBCon.Prepare("select username, password from users where username=?")
-	defer stmt.Close()
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to authenticate user", http.StatusInternalServerError)
 		return
 	}
+	defer stmt.Close()
 
 	var dbUsername, dbPassword string
 	if stmt.QueryRow(decodedBody.Username).Scan(&dbUsername, &dbPassword) != nil {
@@ -196,12 +196,12 @@ func generateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt, err = db.DBCon.Prepare("insert or replace into access_tokens(username, access_token) values(?, ?)")
-	defer stmt.Close()
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to generate access token", http.StatusInternalServerError)
 		return
 	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec(dbUsername, accessToken)
 	if err != nil {
@@ -230,12 +230,12 @@ func revokeTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt, err := db.DBCon.Prepare("delete from access_tokens where access_token=?")
-	defer stmt.Close()
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to authenticate user", http.StatusInternalServerError)
 		return
 	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec(decodedBody.AccessToken)
 	if err != nil {

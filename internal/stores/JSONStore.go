@@ -6,18 +6,61 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
+	"url-shortener/internal/config"
 )
 
 // JSONStore - simple Store based on a JSON file
 type JSONStore struct{}
 
+func openFile(write bool) (*os.File, error) {
+	var fileNeedsInit = false
+	var err error
+
+	if _, err := os.Stat(config.Config.StoreLocation); os.IsNotExist(err) {
+		fileNeedsInit = true
+		write = true
+	}
+
+	var flag int
+	if write {
+		flag = os.O_CREATE | os.O_RDWR
+	} else {
+		flag = os.O_RDONLY | os.O_CREATE
+	}
+
+	file, err := os.OpenFile(config.Config.StoreLocation, flag, os.ModePerm)
+	if err != nil {
+		println(err.Error())
+		err = errors.New("Failed to open URLs JSON file")
+	}
+
+	if fileNeedsInit {
+		if _, err := file.Write([]byte("[]")); err != nil {
+			println(err.Error())
+			err = errors.New("Failed to create URLs JSON file")
+		}
+
+		if err := file.Sync(); err != nil {
+			println(err.Error())
+			err = errors.New("Failed to create URLs JSON file")
+		}
+
+		if _, err := file.Seek(0, 0); err != nil {
+			println(err.Error())
+			err = errors.New("Failed to create URLs JSON file")
+		}
+	}
+
+	return file, err
+}
+
 // GetURLs - GET requests
 func (e JSONStore) GetURLs() (*[]ShortURL, error) {
-	file, err := os.Open("urls.json")
-	defer file.Close()
+	file, err := openFile(false)
 	if err != nil {
-		return nil, errors.New("Failed to open URLs JSON file: " + err.Error())
+		return nil, err
 	}
+	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	_, err = decoder.Token()
@@ -40,15 +83,16 @@ func (e JSONStore) GetURLs() (*[]ShortURL, error) {
 
 // GetURL - GET /slug requests
 func (e JSONStore) GetURL(slug string) (*ShortURL, error) {
-	file, err := os.Open("urls.json")
-	defer file.Close()
+	file, err := openFile(false)
 	if err != nil {
-		return nil, errors.New("Failed to open URLs JSON file: " + err.Error())
+		return nil, err
 	}
+	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	_, err = decoder.Token()
 	if err != nil {
+		println(err.Error())
 		return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
 	}
 
@@ -56,34 +100,7 @@ func (e JSONStore) GetURL(slug string) (*ShortURL, error) {
 	for decoder.More() {
 		err := decoder.Decode(&url)
 		if err != nil {
-			return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
-		}
-		if url.Slug == slug {
-			return &url, nil
-		}
-	}
-
-	return nil, nil
-}
-
-// GetURLBySlug - GET / redirect requests
-func (e JSONStore) GetURLBySlug(slug string) (*ShortURL, error) {
-	file, err := os.Open("urls.json")
-	defer file.Close()
-	if err != nil {
-		return nil, errors.New("Failed to open URLs JSON file: " + err.Error())
-	}
-
-	decoder := json.NewDecoder(file)
-	_, err = decoder.Token()
-	if err != nil {
-		return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
-	}
-
-	url := ShortURL{}
-	for decoder.More() {
-		err := decoder.Decode(&url)
-		if err != nil {
+			println(err.Error())
 			return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
 		}
 		if url.Slug == slug {
@@ -96,11 +113,11 @@ func (e JSONStore) GetURLBySlug(slug string) (*ShortURL, error) {
 
 // InsertURL - POST requests
 func (e JSONStore) InsertURL(slug, url, password string, allowedVisits int) (*ShortURL, error) {
-	file, err := os.OpenFile("urls.json", os.O_RDWR, os.ModePerm)
-	defer file.Close()
+	file, err := openFile(true)
 	if err != nil {
-		return nil, errors.New("Failed to open URLs JSON file: " + err.Error())
+		return nil, err
 	}
+	defer file.Close()
 
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -131,12 +148,11 @@ func (e JSONStore) InsertURL(slug, url, password string, allowedVisits int) (*Sh
 
 // DeleteURL - DELETE requests
 func (e JSONStore) DeleteURL(slug string) error {
-	file, err := os.OpenFile("urls.json", os.O_RDWR, os.ModePerm)
-	defer file.Close()
-
+	file, err := openFile(true)
 	if err != nil {
-		return errors.New("Failed to open URLs JSON file: " + err.Error())
+		return err
 	}
+	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	_, err = decoder.Token()
@@ -182,12 +198,11 @@ func (e JSONStore) DeleteURL(slug string) error {
 
 // UpdateURL - PUT requests
 func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) error {
-	file, err := os.OpenFile("urls.json", os.O_RDWR, os.ModePerm)
-	defer file.Close()
-
+	file, err := openFile(true)
 	if err != nil {
-		return errors.New("Failed to open URLs JSON file: " + err.Error())
+		return err
 	}
+	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	_, err = decoder.Token()
@@ -235,12 +250,11 @@ func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) erro
 // RecordVisit - record a visit to a short URL
 func (e JSONStore) RecordVisit(slug string) error {
 	// TODO add more stats like referrer
-	file, err := os.OpenFile("urls.json", os.O_RDWR, os.ModePerm)
-	defer file.Close()
-
+	file, err := openFile(true)
 	if err != nil {
-		return errors.New("Failed to open URLs JSON file: " + err.Error())
+		return err
 	}
+	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	_, err = decoder.Token()

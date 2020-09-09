@@ -2,6 +2,4 @@ package db
 
 import "database/sql"
 
-var (
-	DBCon *sql.DB
-)
+var DBCon *sql.DB

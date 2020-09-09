@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"url-shortener/internal/stores"
 	"strings"
+	"url-shortener/internal/config"
+	"url-shortener/internal/stores"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
@@ -177,8 +178,8 @@ func urlHandler(w http.ResponseWriter, r *http.Request, store stores.Store) {
 }
 
 // SetUpUrlsHandlers - set up the /urls REST handlers
-func SetUpUrlsHandlers(subrouter *mux.Router, storeType string) error {
-	store, err := stores.StoreFactory(storeType)
+func SetUpUrlsHandlers(subrouter *mux.Router) error {
+	store, err := stores.StoreFactory(config.Config.StoreType)
 	if err != nil {
 		return err
 	}

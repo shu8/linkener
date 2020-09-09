@@ -2,45 +2,62 @@ package main
 
 import (
 	"database/sql"
-	"url-shortener/internal/db"
-	"url-shortener/internal/handlers"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"url-shortener/internal/config"
+	"url-shortener/internal/db"
+	"url-shortener/internal/handlers"
 
 	"github.com/gorilla/mux"
 )
 
-const (
-	storeType  = "json"
-	privateAPI = false
-)
+func setCORSHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, DNT, Referer, User-Agent")
+}
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+		setCORSHeaders(w)
 		next.ServeHTTP(w, r)
 	})
 }
 
 func main() {
-	var err error
-	db.DBCon, err = sql.Open("sqlite3", "auth.db")
+	configContents, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		log.Fatal("Failed to open auth database")
+		log.Fatal("Failed to open config file: " + err.Error())
+		return
+	}
+
+	err = json.Unmarshal(configContents, &config.Config)
+	if err != nil {
+		log.Fatal("Failed to open config file: " + err.Error())
+		return
+	}
+
+	db.DBCon, err = sql.Open("sqlite3", config.Config.AuthDBLocation)
+	if err != nil {
 		db.DBCon.Close()
+		log.Fatal("Failed to open auth database: " + err.Error())
 		return
 	}
 
 	router := mux.NewRouter()
-	router.Use(corsMiddleware)
 
 	api := router.PathPrefix("/api").Subrouter()
+	api.Use(corsMiddleware)
+	api.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		setCORSHeaders(w)
+	})
 
 	urls := api.PathPrefix("/urls").Subrouter()
 	urls.Use(handlers.AuthMiddleware)
-	err = handlers.SetUpUrlsHandlers(urls, storeType)
+	err = handlers.SetUpUrlsHandlers(urls)
 	if err != nil {
 		log.Fatal("Error starting /urls: " + err.Error())
 	}
@@ -52,13 +69,14 @@ func main() {
 	}
 
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handlers.ForwarderHandler(w, r, storeType)
+		handlers.ForwarderHandler(w, r)
 	})
 
-	if privateAPI {
-		log.Fatal(http.ListenAndServe("127.0.0.1:3000", router))
+	fmt.Printf("Listening on port %d", config.Config.Port)
+	if config.Config.PrivateAPI {
+		log.Fatal(http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", config.Config.Port), router))
 	} else {
-		log.Fatal(http.ListenAndServe(":3000", router))
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Config.Port), router))
 	}
 	db.DBCon.Close()
 }

@@ -16,12 +16,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		stmt, err := db.DBCon.Prepare("select username from access_tokens where access_token=? and expiry>CURRENT_TIMESTAMP limit 1")
-		defer stmt.Close()
 		if err != nil {
 			println(err.Error())
 			http.Error(w, "Failed to authorize request", http.StatusInternalServerError)
 			return
 		}
+		defer stmt.Close()
 
 		rows, err := stmt.Query(token)
 		if err != nil {

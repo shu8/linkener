@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"net/http"
-	"url-shortener/internal/stores"
 	"text/template"
+	"url-shortener/internal/config"
+	"url-shortener/internal/stores"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -21,8 +22,8 @@ func redirect(w http.ResponseWriter, r *http.Request, store stores.Store, url *s
 }
 
 // ForwarderHandler - perform the short URL HTTP redirects on the / route
-func ForwarderHandler(w http.ResponseWriter, r *http.Request, storeType string) {
-	store, err := stores.StoreFactory(storeType)
+func ForwarderHandler(w http.ResponseWriter, r *http.Request) {
+	store, err := stores.StoreFactory(config.Config.StoreType)
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to unshorten URL", http.StatusBadRequest)

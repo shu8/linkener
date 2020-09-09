@@ -6,8 +6,7 @@
         "allowed_visits": 20,
         "stats": {
             "count": 16
-        },
-        "password": "$2a$10$60KF3Oc.AO5Jb/X2uxbJJObHkR5JYiybTnnxe.FB0esqJ3r6SzsrS"
+        }
     },
     {
         "slug": "Ayp8d",
@@ -16,8 +15,7 @@
         "allowed_visits": 2,
         "stats": {
             "count": 1
-        },
-        "password": ""
+        }
     },
     {
         "slug": "blog",
@@ -26,8 +24,7 @@
         "allowed_visits": 10,
         "stats": {
             "count": 0
-        },
-        "password": "$2a$10$G7oglk7cTx5us3BblIqXeuXTOc3xY/NOFz6anLwzwO7etBZfH5FWq"
+        }
     },
     {
         "slug": "CjeF78",
@@ -35,8 +32,7 @@
         "date_created": "2020-09-07T11:47:21.1296084+01:00",
         "allowed_visits": 10,
         "stats": {
-            "count": 0
-        },
-        "password": "$2a$10$iKOoSldKJSA6.XIvFsxpquW/hEKY3yPdsRy1fHMAnShgx6GrbxuYq"
+            "count": 1
+        }
     }
 ]
