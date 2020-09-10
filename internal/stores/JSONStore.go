@@ -3,7 +3,6 @@ package stores
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"time"
 	"url-shortener/internal/config"
@@ -54,28 +53,66 @@ func openFile(write bool) (*os.File, error) {
 	return file, err
 }
 
+func writeURLsToFile(file *os.File, urls []ShortURL) error {
+	out, err := json.MarshalIndent(urls, "", "    ")
+	if err != nil {
+		println(err.Error())
+		return errors.New("Error saving new URLs JSON file")
+	}
+
+	file.Truncate(0)
+	_, err = file.WriteAt(out, 0)
+	if err != nil {
+		println(err.Error())
+		return errors.New("Error writing to URLs JSON file")
+	}
+
+	return nil
+}
+
+func getFileAndDecoder() (*os.File, *json.Decoder, error) {
+	file, err := openFile(false)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	decoder := json.NewDecoder(file)
+	_, err = decoder.Token()
+	if err != nil {
+		file.Close()
+		println(err.Error())
+		return nil, nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
+	}
+
+	return file, decoder, nil
+}
+
+func getAllURLs(decoder *json.Decoder) ([]ShortURL, error) {
+	urls := []ShortURL{}
+	parsedURL := ShortURL{}
+	for decoder.More() {
+		err := decoder.Decode(&parsedURL)
+		if err != nil {
+			println(err.Error())
+			return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
+		}
+		urls = append(urls, parsedURL)
+	}
+
+	return urls, nil
+}
+
 // GetURLs - GET requests
 func (e JSONStore) GetURLs() (*[]ShortURL, error) {
-	file, err := openFile(false)
+	file, decoder, err := getFileAndDecoder()
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	decoder := json.NewDecoder(file)
-	_, err = decoder.Token()
+	urls, err := getAllURLs(decoder)
 	if err != nil {
-		return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
-	}
-
-	urls := []ShortURL{}
-	url := ShortURL{}
-	for decoder.More() {
-		err := decoder.Decode(&url)
-		if err != nil {
-			return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
-		}
-		urls = append(urls, url)
+		return nil, err
 	}
 
 	return &urls, nil
@@ -83,18 +120,11 @@ func (e JSONStore) GetURLs() (*[]ShortURL, error) {
 
 // GetURL - GET /slug requests
 func (e JSONStore) GetURL(slug string) (*ShortURL, error) {
-	file, err := openFile(false)
+	file, decoder, err := getFileAndDecoder()
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	_, err = decoder.Token()
-	if err != nil {
-		println(err.Error())
-		return nil, errors.New("Failed to parse URLs JSON file: invalid JSON")
-	}
 
 	url := ShortURL{}
 	for decoder.More() {
@@ -113,34 +143,22 @@ func (e JSONStore) GetURL(slug string) (*ShortURL, error) {
 
 // InsertURL - POST requests
 func (e JSONStore) InsertURL(slug, url, password string, allowedVisits int) (*ShortURL, error) {
-	file, err := openFile(true)
+	file, decoder, err := getFileAndDecoder()
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	byteValue, err := ioutil.ReadAll(file)
+	urls, err := getAllURLs(decoder)
 	if err != nil {
-		return nil, errors.New("Failed to read URLs JSON file")
-	}
-
-	urls := []ShortURL{}
-	parseErr := json.Unmarshal(byteValue, &urls)
-	if parseErr != nil {
-		return nil, errors.New("Failed to parse URLs JSON file")
+		return nil, err
 	}
 
 	newURL := ShortURL{DateCreated: time.Now(), URL: url, Slug: slug, AllowedVisits: allowedVisits, Password: password}
 	urls = append(urls, newURL)
 
-	out, err := json.MarshalIndent(urls, "", "    ")
-	if err != nil {
-		return nil, errors.New("Error saving new URLs JSON file")
-	}
-
-	_, err = file.WriteAt(out, 0)
-	if err != nil {
-		return nil, errors.New("Error writing to URLs JSON file")
+	if err := writeURLsToFile(file, urls); err != nil {
+		return nil, err
 	}
 
 	return &newURL, nil
@@ -148,17 +166,11 @@ func (e JSONStore) InsertURL(slug, url, password string, allowedVisits int) (*Sh
 
 // DeleteURL - DELETE requests
 func (e JSONStore) DeleteURL(slug string) error {
-	file, err := openFile(true)
+	file, decoder, err := getFileAndDecoder()
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	_, err = decoder.Token()
-	if err != nil {
-		return errors.New("Failed to parse URLs JSON file: invalid JSON")
-	}
 
 	urls := []ShortURL{}
 	parsedURL := ShortURL{}
@@ -166,6 +178,7 @@ func (e JSONStore) DeleteURL(slug string) error {
 	for decoder.More() {
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
+			println(err.Error())
 			return errors.New("Failed to parse URLs JSON file: invalid JSON")
 		}
 
@@ -182,15 +195,8 @@ func (e JSONStore) DeleteURL(slug string) error {
 		return errors.New("URL not found")
 	}
 
-	out, err := json.MarshalIndent(urls, "", "    ")
-	if err != nil {
-		return errors.New("Error saving new URLs JSON file")
-	}
-
-	file.Truncate(0)
-	_, err = file.WriteAt(out, 0)
-	if err != nil {
-		return errors.New("Error writing to URLs JSON file")
+	if err := writeURLsToFile(file, urls); err != nil {
+		return err
 	}
 
 	return nil
@@ -198,17 +204,11 @@ func (e JSONStore) DeleteURL(slug string) error {
 
 // UpdateURL - PUT requests
 func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) error {
-	file, err := openFile(true)
+	file, decoder, err := getFileAndDecoder()
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	_, err = decoder.Token()
-	if err != nil {
-		return errors.New("Failed to parse URLs JSON file: invalid JSON")
-	}
 
 	found := false
 	parsedURL := ShortURL{}
@@ -217,6 +217,7 @@ func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) erro
 	for decoder.More() {
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
+			println(err.Error())
 			return errors.New("Failed to parse URLs JSON file: invalid JSON")
 		}
 		if parsedURL.Slug == slug {
@@ -233,15 +234,8 @@ func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) erro
 		return errors.New("URL not found")
 	}
 
-	out, err := json.MarshalIndent(urls, "", "    ")
-	if err != nil {
-		return errors.New("Error saving new URLs JSON file")
-	}
-
-	file.Truncate(0)
-	_, err = file.WriteAt(out, 0)
-	if err != nil {
-		return errors.New("Error writing to URLs JSON file")
+	if err := writeURLsToFile(file, urls); err != nil {
+		return err
 	}
 
 	return nil
@@ -250,17 +244,11 @@ func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) erro
 // RecordVisit - record a visit to a short URL
 func (e JSONStore) RecordVisit(slug string) error {
 	// TODO add more stats like referrer
-	file, err := openFile(true)
+	file, decoder, err := getFileAndDecoder()
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	_, err = decoder.Token()
-	if err != nil {
-		return errors.New("Failed to parse URLs JSON file: invalid JSON")
-	}
 
 	found := false
 	parsedURL := ShortURL{}
@@ -269,6 +257,7 @@ func (e JSONStore) RecordVisit(slug string) error {
 	for decoder.More() {
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
+			println(err.Error())
 			return errors.New("Failed to parse URLs JSON file: invalid JSON")
 		}
 		if parsedURL.Slug == slug {
@@ -283,15 +272,8 @@ func (e JSONStore) RecordVisit(slug string) error {
 		return errors.New("URL not found")
 	}
 
-	out, err := json.MarshalIndent(urls, "", "    ")
-	if err != nil {
-		return errors.New("Error saving new URLs JSON file")
-	}
-
-	file.Truncate(0)
-	_, err = file.WriteAt(out, 0)
-	if err != nil {
-		return errors.New("Error writing to URLs JSON file")
+	if err := writeURLsToFile(file, urls); err != nil {
+		return err
 	}
 
 	return nil
