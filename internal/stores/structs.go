@@ -9,26 +9,27 @@ type Store interface {
 	InsertURL(slug, url, password string, allowedVisits int) (*ShortURL, error)
 	DeleteURL(slug string) error
 	UpdateURL(slug, url, password string, allowedVisits int) error
-	RecordVisit(slug string) error
+	RecordVisit(slug, referer string) error
 }
 
-// VisitStats - global structure for each ShortURL
-type VisitStats struct {
-	Count int `json:"count"`
+// Visit - global structure for each ShortURL
+type Visit struct {
+	Referer string
 }
 
 // AddVisit - helper function to record a visit to a short URL
-func (e *VisitStats) AddVisit() {
-	(*e).Count++
+func (e *ShortURL) AddVisit(referer string) {
+	visit := Visit{Referer: referer}
+	(*e).Visits = append(e.Visits, visit)
 }
 
 // ShortURL - global structure (no matter what Store interface!)
 type ShortURL struct {
-	Slug          string     `json:"slug"`
-	URL           string     `json:"url"`
-	DateCreated   time.Time  `json:"date_created"`
-	AllowedVisits int        `json:"allowed_visits"`
-	Stats         VisitStats `json:"stats"`
+	Slug          string    `json:"slug"`
+	URL           string    `json:"url"`
+	DateCreated   time.Time `json:"date_created"`
+	AllowedVisits int       `json:"allowed_visits"`
+	Visits        []Visit   `json:"visits"`
 	// Hide password from JSON responses
 	Password string `json:"-"`
 }

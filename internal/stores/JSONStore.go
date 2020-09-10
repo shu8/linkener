@@ -70,8 +70,8 @@ func writeURLsToFile(file *os.File, urls []ShortURL) error {
 	return nil
 }
 
-func getFileAndDecoder() (*os.File, *json.Decoder, error) {
-	file, err := openFile(false)
+func getFileAndDecoder(write bool) (*os.File, *json.Decoder, error) {
+	file, err := openFile(write)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -104,7 +104,7 @@ func getAllURLs(decoder *json.Decoder) ([]ShortURL, error) {
 
 // GetURLs - GET requests
 func (e JSONStore) GetURLs() (*[]ShortURL, error) {
-	file, decoder, err := getFileAndDecoder()
+	file, decoder, err := getFileAndDecoder(false)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (e JSONStore) GetURLs() (*[]ShortURL, error) {
 
 // GetURL - GET /slug requests
 func (e JSONStore) GetURL(slug string) (*ShortURL, error) {
-	file, decoder, err := getFileAndDecoder()
+	file, decoder, err := getFileAndDecoder(false)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (e JSONStore) GetURL(slug string) (*ShortURL, error) {
 
 // InsertURL - POST requests
 func (e JSONStore) InsertURL(slug, url, password string, allowedVisits int) (*ShortURL, error) {
-	file, decoder, err := getFileAndDecoder()
+	file, decoder, err := getFileAndDecoder(true)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (e JSONStore) InsertURL(slug, url, password string, allowedVisits int) (*Sh
 
 // DeleteURL - DELETE requests
 func (e JSONStore) DeleteURL(slug string) error {
-	file, decoder, err := getFileAndDecoder()
+	file, decoder, err := getFileAndDecoder(true)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (e JSONStore) DeleteURL(slug string) error {
 
 // UpdateURL - PUT requests
 func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) error {
-	file, decoder, err := getFileAndDecoder()
+	file, decoder, err := getFileAndDecoder(true)
 	if err != nil {
 		return err
 	}
@@ -242,9 +242,8 @@ func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) erro
 }
 
 // RecordVisit - record a visit to a short URL
-func (e JSONStore) RecordVisit(slug string) error {
-	// TODO add more stats like referrer
-	file, decoder, err := getFileAndDecoder()
+func (e JSONStore) RecordVisit(slug, referer string) error {
+	file, decoder, err := getFileAndDecoder(true)
 	if err != nil {
 		return err
 	}
@@ -261,7 +260,7 @@ func (e JSONStore) RecordVisit(slug string) error {
 			return errors.New("Failed to parse URLs JSON file: invalid JSON")
 		}
 		if parsedURL.Slug == slug {
-			(&parsedURL).Stats.AddVisit()
+			(&parsedURL).AddVisit(referer)
 			found = true
 		}
 

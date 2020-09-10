@@ -10,7 +10,8 @@ import (
 )
 
 func redirect(w http.ResponseWriter, r *http.Request, store stores.Store, url *stores.ShortURL) {
-	err := store.RecordVisit(url.Slug)
+	// TODO add more stats like location?
+	err := store.RecordVisit(url.Slug, r.Referer())
 	if err != nil {
 		println(err.Error())
 		http.Error(w, "Failed to unshorten URL", http.StatusInternalServerError)
@@ -44,7 +45,7 @@ func ForwarderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if url.Stats.Count >= url.AllowedVisits {
+	if len(url.Visits) >= url.AllowedVisits {
 		http.Error(w, "URL expired", http.StatusForbidden)
 		return
 	}
