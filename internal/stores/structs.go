@@ -30,6 +30,5 @@ type ShortURL struct {
 	DateCreated   time.Time `json:"date_created"`
 	AllowedVisits int       `json:"allowed_visits"`
 	Visits        []Visit   `json:"visits"`
-	// Hide password from JSON responses
-	Password string `json:"-"`
+	Password      string    `json:"password"`
 }

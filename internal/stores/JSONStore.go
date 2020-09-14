@@ -89,8 +89,8 @@ func getFileAndDecoder(write bool) (*os.File, *json.Decoder, error) {
 
 func getAllURLs(decoder *json.Decoder) ([]ShortURL, error) {
 	urls := []ShortURL{}
-	parsedURL := ShortURL{}
 	for decoder.More() {
+		parsedURL := ShortURL{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
@@ -173,9 +173,9 @@ func (e JSONStore) DeleteURL(slug string) error {
 	defer file.Close()
 
 	urls := []ShortURL{}
-	parsedURL := ShortURL{}
 	found := false
 	for decoder.More() {
+		parsedURL := ShortURL{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
@@ -211,10 +211,10 @@ func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) erro
 	defer file.Close()
 
 	found := false
-	parsedURL := ShortURL{}
 	urls := []ShortURL{}
 
 	for decoder.More() {
+		parsedURL := ShortURL{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
@@ -250,10 +250,10 @@ func (e JSONStore) RecordVisit(slug, referer string) error {
 	defer file.Close()
 
 	found := false
-	parsedURL := ShortURL{}
 	urls := []ShortURL{}
 
 	for decoder.More() {
+		parsedURL := ShortURL{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
