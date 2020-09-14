@@ -72,7 +72,7 @@ func main() {
 		handlers.ForwarderHandler(w, r)
 	})
 
-	fmt.Printf("Listening on port %d", config.Config.Port)
+	fmt.Printf("Listening on port %d\n", config.Config.Port)
 	if config.Config.PrivateAPI {
 		log.Fatal(http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", config.Config.Port), router))
 	} else {

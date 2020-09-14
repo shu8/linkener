@@ -2,7 +2,7 @@ package stores
 
 import "time"
 
-// Store - interface for all types of URL data storage formats (e.g. JSON/PostgreSQL)
+// Store - interface for all types of URL data storage formats (e.g. JSON/SQLite)
 type Store interface {
 	GetURLs() (*[]ShortURL, error)
 	GetURL(string) (*ShortURL, error)
@@ -14,7 +14,7 @@ type Store interface {
 
 // Visit - global structure for each ShortURL
 type Visit struct {
-	Referer string
+	Referer string `json:"referer"`
 }
 
 // AddVisit - helper function to record a visit to a short URL
