@@ -23,9 +23,9 @@ type newURLRequest struct {
 }
 
 type updateURLRequest struct {
-	URL           string `json:"url"`
-	AllowedVisits int    `json:"allowed_visits"`
-	Password      string `json:"password"`
+	URL           string  `json:"url"`
+	AllowedVisits int     `json:"allowed_visits"`
+	Password      *string `json:"password"`
 }
 
 func generateSlug(slugLength int) (string, error) {
@@ -158,17 +158,30 @@ func urlHandler(w http.ResponseWriter, r *http.Request, store stores.Store) {
 			return
 		}
 
-		if newURL.Password != "" {
-			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newURL.Password), bcrypt.DefaultCost)
+		if newURL.Password != nil {
+			// New password
+			if *newURL.Password != "" {
+				hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*newURL.Password), bcrypt.DefaultCost)
+				if err != nil {
+					println(err.Error())
+					http.Error(w, "Failed to salt password", http.StatusInternalServerError)
+					return
+				}
+				hashedPasswordStr := string(hashedPassword)
+				newURL.Password = &hashedPasswordStr
+			}
+		} else {
+			// Re-set newURL password to be existing password
+			oldURL, err := store.GetURL(slug)
 			if err != nil {
 				println(err.Error())
-				http.Error(w, "Failed to salt password", http.StatusInternalServerError)
+				http.Error(w, "Failed to update URL", http.StatusInternalServerError)
 				return
 			}
-			(&newURL).Password = string(hashedPassword)
+			newURL.Password = &oldURL.Password
 		}
 
-		err = store.UpdateURL(slug, newURL.URL, newURL.Password, newURL.AllowedVisits)
+		err = store.UpdateURL(slug, newURL.URL, *newURL.Password, newURL.AllowedVisits)
 		if err != nil {
 			println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
