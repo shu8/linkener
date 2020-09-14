@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"linkener/internal/config"
+	"linkener/internal/db"
+	"linkener/internal/handlers"
 	"log"
 	"net/http"
-	"url-shortener/internal/config"
-	"url-shortener/internal/db"
-	"url-shortener/internal/handlers"
 
 	"github.com/gorilla/mux"
 )
@@ -56,7 +56,8 @@ func main() {
 	})
 
 	urls := api.PathPrefix("/urls").Subrouter()
-	urls.Use(handlers.AuthMiddleware)
+	// TODO uncomment
+	// urls.Use(handlers.AuthMiddleware)
 	err = handlers.SetUpUrlsHandlers(urls)
 	if err != nil {
 		log.Fatal("Error starting /urls: " + err.Error())

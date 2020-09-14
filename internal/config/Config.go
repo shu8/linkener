@@ -10,9 +10,10 @@ type configStructure struct {
 
 // Config is the global config for the URL shortener, with the default values as follows
 var Config = configStructure{
-	StoreType:      "json",
-	StoreLocation:  "/var/lib/url-shortener/urls.json",
-	PrivateAPI:     false,
-	Port:           3000,
-	AuthDBLocation: "/var/lib/url-shortener/auth.db",
+	StoreType:           "json",
+	PrivateAPI:          false,
+	Port:                3000,
+	AuthDBLocation:      "/var/lib/linkener/auth.db",
+	JSONStoreLocation:   "/var/lib/linkener/urls.json",
+	SQLiteStoreLocation: "/var/lib/linkener/urls.db",
 }

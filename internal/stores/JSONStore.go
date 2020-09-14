@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 	"time"
-	"url-shortener/internal/config"
+	"linkener/internal/config"
 )
 
 // JSONStore - simple Store based on a JSON file

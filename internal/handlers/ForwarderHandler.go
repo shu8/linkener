@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 	"text/template"
-	"url-shortener/internal/config"
-	"url-shortener/internal/stores"
+	"linkener/internal/config"
+	"linkener/internal/stores"
 
 	"golang.org/x/crypto/bcrypt"
 )

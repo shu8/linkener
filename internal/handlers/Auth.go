@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"url-shortener/internal/db"
+	"linkener/internal/db"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"

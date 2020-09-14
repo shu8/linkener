@@ -1,4 +1,4 @@
-module url-shortener
+module linkener
 
 go 1.15
 

@@ -1,7 +1,7 @@
 version: "3.3"
 services:
-  url_shortener:
+  linkener:
     build: .
     ports:
       - 3000:3000
-    container_name: url_shortener
+    container_name: linkener

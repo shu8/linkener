@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"url-shortener/internal/db"
+	"linkener/internal/db"
 	"net/http"
 )
 

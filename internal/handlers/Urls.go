@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"url-shortener/internal/config"
-	"url-shortener/internal/stores"
+	"linkener/internal/config"
+	"linkener/internal/stores"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
