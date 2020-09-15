@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"linkener/internal/config"
@@ -10,6 +11,8 @@ import (
 	"linkener/internal/handlers"
 	"log"
 	"net/http"
+	"os/user"
+	"path/filepath"
 
 	"github.com/gorilla/mux"
 )
@@ -28,7 +31,19 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-	configContents, err := ioutil.ReadFile("config.json")
+	user, err := user.Current()
+	if err != nil {
+		log.Fatal("Failed to find config file: " + err.Error())
+		return
+	}
+
+	var configFileLocation string
+	defaultConfigFileLocation := filepath.Join(user.HomeDir, ".linkener", "config.json")
+	flag.StringVar(&configFileLocation, "config", defaultConfigFileLocation, "location for the config JSON file")
+	flag.StringVar(&configFileLocation, "c", defaultConfigFileLocation, "location for the config JSON file (shorthand)")
+	flag.Parse()
+
+	configContents, err := ioutil.ReadFile(configFileLocation)
 	if err != nil {
 		log.Fatal("Failed to open config file: " + err.Error())
 		return
