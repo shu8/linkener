@@ -15,7 +15,7 @@ func openFile(write bool) (*os.File, error) {
 	var fileNeedsInit = false
 	var err error
 
-	if _, err := os.Stat(config.Config.StoreLocation); os.IsNotExist(err) {
+	if _, err := os.Stat(config.Config.JSONStoreLocation); os.IsNotExist(err) {
 		fileNeedsInit = true
 		write = true
 	}
@@ -27,7 +27,7 @@ func openFile(write bool) (*os.File, error) {
 		flag = os.O_RDONLY | os.O_CREATE
 	}
 
-	file, err := os.OpenFile(config.Config.StoreLocation, flag, os.ModePerm)
+	file, err := os.OpenFile(config.Config.JSONStoreLocation, flag, os.ModePerm)
 	if err != nil {
 		println(err.Error())
 		err = errors.New("Failed to open URLs JSON file")

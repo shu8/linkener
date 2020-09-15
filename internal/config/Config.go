@@ -1,11 +1,12 @@
 package config
 
 type configStructure struct {
-	StoreType      string `json:"store_type"`
-	StoreLocation  string `json:"store_location,omitempty"`
-	PrivateAPI     bool   `json:"private_api"`
-	Port           int    `json:"port"`
-	AuthDBLocation string `json:"auth_db_location"`
+	StoreType           string `json:"store_type"`
+	PrivateAPI          bool   `json:"private_api"`
+	Port                int    `json:"port"`
+	AuthDBLocation      string `json:"auth_db_location"`
+	JSONStoreLocation   string `json:"json_store_location,omitempty"`
+	SQLiteStoreLocation string `json:"sqlite_store_location,omitempty"`
 }
 
 // Config is the global config for the URL shortener, with the default values as follows

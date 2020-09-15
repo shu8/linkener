@@ -1,6 +1,7 @@
 {
     "store_type": "json",
-    "store_location": "urls.json",
+    "json_store_location": "urls.json",
+    "sqlite_store_location": "urls.db",
     "private_api": false,
     "port": 3000,
     "auth_db_location": "auth.db"

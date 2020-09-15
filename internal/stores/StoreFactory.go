@@ -7,6 +7,8 @@ func StoreFactory(storeType string) (Store, error) {
 	switch storeType {
 	case "json":
 		return JSONStore{}, nil
+	case "sqlite":
+		return SQLiteStore{}, nil
 	}
 	return nil, errors.New("Unknown Store type")
 }
