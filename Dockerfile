@@ -9,13 +9,20 @@ COPY . .
 RUN go mod download
 
 ENV CGO_ENABLED=0
-RUN go build -v ./...
-RUN go install ./...
+RUN go build -v ./... && go install ./...
 
 RUN ./setup.sh
-RUN mkdir -p /var/lib/linkener
-RUN mv auth.db /var/lib/linkener scratch
+RUN mkdir -p /var/lib/linkener && mv auth.db /var/lib/linkener/
+RUN mkdir -p .linkener && mv config.json .linkener/
+
+FROM alpine
+
+# Linkener binary executable
 COPY --from=build /go/bin/linkener /
-COPY --from=build /var/lib/linkener/ /var/lib/
+# Auth DB
+COPY --from=build /var/lib/linkener/ /var/lib/linkener/
+# Default config
+COPY --from=build /go/src/github.com/shu8/linkener/.linkener/ /root/.linkener/
+
 EXPOSE 3000
 ENTRYPOINT [ "/linkener" ]
