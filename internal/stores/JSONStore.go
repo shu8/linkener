@@ -3,9 +3,9 @@ package stores
 import (
 	"encoding/json"
 	"errors"
+	"linkener/internal/config"
 	"os"
 	"time"
-	"linkener/internal/config"
 )
 
 // JSONStore - simple Store based on a JSON file
@@ -91,6 +91,7 @@ func getAllURLs(decoder *json.Decoder) ([]ShortURL, error) {
 	urls := []ShortURL{}
 	for decoder.More() {
 		parsedURL := ShortURL{}
+		parsedURL.Visits = []Visit{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
@@ -126,8 +127,9 @@ func (e JSONStore) GetURL(slug string) (*ShortURL, error) {
 	}
 	defer file.Close()
 
-	url := ShortURL{}
 	for decoder.More() {
+		url := ShortURL{}
+		url.Visits = []Visit{}
 		err := decoder.Decode(&url)
 		if err != nil {
 			println(err.Error())
@@ -154,7 +156,7 @@ func (e JSONStore) InsertURL(slug, url, password string, allowedVisits int) (*Sh
 		return nil, err
 	}
 
-	newURL := ShortURL{DateCreated: time.Now(), URL: url, Slug: slug, AllowedVisits: allowedVisits, Password: password}
+	newURL := ShortURL{DateCreated: time.Now(), URL: url, Slug: slug, AllowedVisits: allowedVisits, Password: password, Visits: []Visit{}}
 	urls = append(urls, newURL)
 
 	if err := writeURLsToFile(file, urls); err != nil {
@@ -176,6 +178,7 @@ func (e JSONStore) DeleteURL(slug string) error {
 	found := false
 	for decoder.More() {
 		parsedURL := ShortURL{}
+		parsedURL.Visits = []Visit{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
@@ -215,6 +218,7 @@ func (e JSONStore) UpdateURL(slug, url, password string, allowedVisits int) erro
 
 	for decoder.More() {
 		parsedURL := ShortURL{}
+		parsedURL.Visits = []Visit{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
@@ -254,6 +258,7 @@ func (e JSONStore) RecordVisit(slug, referer string) error {
 
 	for decoder.More() {
 		parsedURL := ShortURL{}
+		parsedURL.Visits = []Visit{}
 		err := decoder.Decode(&parsedURL)
 		if err != nil {
 			println(err.Error())
