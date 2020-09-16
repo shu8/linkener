@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"linkener/internal/config"
-	"linkener/internal/stores"
+	"github.com/shu8/linkener/internal/config"
+	"github.com/shu8/linkener/internal/stores"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"

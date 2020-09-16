@@ -1,4 +1,4 @@
-module linkener
+module github.com/shu8/linkener
 
 go 1.15
 
@@ -6,5 +6,4 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/mattn/go-sqlite3 v1.14.2
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
-	golang.org/x/tools v0.0.0-20200911193555-6422fca01df9 // indirect
 )

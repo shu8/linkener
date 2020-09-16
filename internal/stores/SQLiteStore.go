@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"time"
-	"linkener/internal/config"
+	"github.com/shu8/linkener/internal/config"
 )
 
 // SQLiteStore - simple Store for an SQLite database

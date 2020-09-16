@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	"linkener/internal/config"
-	"linkener/internal/db"
+	"github.com/shu8/linkener/internal/config"
+	"github.com/shu8/linkener/internal/db"
 	"net/http"
 
 	"github.com/gorilla/mux"

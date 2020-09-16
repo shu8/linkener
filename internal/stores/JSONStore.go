@@ -3,7 +3,7 @@ package stores
 import (
 	"encoding/json"
 	"errors"
-	"linkener/internal/config"
+	"github.com/shu8/linkener/internal/config"
 	"os"
 	"time"
 )

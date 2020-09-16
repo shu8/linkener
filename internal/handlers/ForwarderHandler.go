@@ -3,26 +3,13 @@ package handlers
 import (
 	"net/http"
 	"text/template"
-	"linkener/internal/config"
-	"linkener/internal/stores"
+
+	"github.com/shu8/linkener/internal/config"
+	"github.com/shu8/linkener/internal/static"
+	"github.com/shu8/linkener/internal/stores"
 
 	"golang.org/x/crypto/bcrypt"
 )
-
-var passwordTemplate = `<html><head><title>Password required!</title></head>
-<body>
-    {{if .Error}}
-    <h2>Incorrect password!</h2>
-    {{end}}
-
-    <form method="POST">
-		<label>Password:</label><br />
-		<input type=hidden name=referer value={{.Referer}}>
-        <input type=password name=password required><br />
-        <input type=submit>
-    </form>
-</body></html>
-`
 
 type templateData struct {
 	Error   bool
@@ -71,7 +58,7 @@ func ForwarderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if url.Password != "" {
-		tmpl := template.Must(template.New("passwordTemplate").Parse(passwordTemplate))
+		tmpl := template.Must(template.New("passwordTemplate").Parse(static.PasswordTemplate))
 		if r.Method != http.MethodPost {
 			tmpl.Execute(w, templateData{
 				Error:   false,
