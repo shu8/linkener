@@ -71,8 +71,10 @@ func main() {
 	})
 
 	urls := api.PathPrefix("/urls").Subrouter()
-	// TODO uncomment
-	// urls.Use(handlers.AuthMiddleware)
+	if config.Config.AuthEnabled {
+		urls.Use(handlers.AuthMiddleware)
+	}
+
 	err = handlers.SetUpUrlsHandlers(urls)
 	if err != nil {
 		log.Fatal("Error starting /urls: " + err.Error())

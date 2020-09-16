@@ -5,6 +5,8 @@ type configStructure struct {
 	PrivateAPI          bool   `json:"private_api"`
 	Port                int    `json:"port"`
 	AuthDBLocation      string `json:"auth_db_location"`
+	AuthEnabled         bool   `json:"auth_enabled"`
+	RegistrationEnabled bool   `json:"registration_enabled"`
 	JSONStoreLocation   string `json:"json_store_location,omitempty"`
 	SQLiteStoreLocation string `json:"sqlite_store_location,omitempty"`
 }
@@ -15,6 +17,8 @@ var Config = configStructure{
 	PrivateAPI:          false,
 	Port:                3000,
 	AuthDBLocation:      "/var/lib/linkener/auth.db",
+	AuthEnabled:         true,
+	RegistrationEnabled: true,
 	JSONStoreLocation:   "/var/lib/linkener/urls.json",
 	SQLiteStoreLocation: "/var/lib/linkener/urls.db",
 }
