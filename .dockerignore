@@ -1,2 +1,6 @@
 .vscode
 *.db
+urls.json
+promo
+README.md
+API.md

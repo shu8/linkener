@@ -7,6 +7,8 @@ type configStructure struct {
 	AuthDBLocation      string `json:"auth_db_location"`
 	AuthEnabled         bool   `json:"auth_enabled"`
 	RegistrationEnabled bool   `json:"registration_enabled"`
+	APIRoot             string `json:"api_root"`
+	RedirectRoot        string `json:"redirect_root"`
 	JSONStoreLocation   string `json:"json_store_location,omitempty"`
 	SQLiteStoreLocation string `json:"sqlite_store_location,omitempty"`
 }
@@ -19,6 +21,8 @@ var Config = configStructure{
 	AuthDBLocation:      "/var/lib/linkener/auth.db",
 	AuthEnabled:         true,
 	RegistrationEnabled: true,
+	APIRoot:             "api",
+	RedirectRoot:        "",
 	JSONStoreLocation:   "/var/lib/linkener/urls.json",
 	SQLiteStoreLocation: "/var/lib/linkener/urls.db",
 }

@@ -6,13 +6,14 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"github.com/shu8/linkener/internal/config"
-	"github.com/shu8/linkener/internal/db"
-	"github.com/shu8/linkener/internal/handlers"
 	"log"
 	"net/http"
 	"os/user"
 	"path/filepath"
+
+	"github.com/shu8/linkener/internal/config"
+	"github.com/shu8/linkener/internal/db"
+	"github.com/shu8/linkener/internal/handlers"
 
 	"github.com/gorilla/mux"
 )
@@ -64,7 +65,7 @@ func main() {
 
 	router := mux.NewRouter()
 
-	api := router.PathPrefix("/api").Subrouter()
+	api := router.PathPrefix("/" + config.Config.APIRoot).Subrouter()
 	api.Use(corsMiddleware)
 	api.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		setCORSHeaders(w)
@@ -86,7 +87,7 @@ func main() {
 		log.Fatal("Error starting /auth: " + err.Error())
 	}
 
-	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/" + config.Config.RedirectRoot).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlers.ForwarderHandler(w, r)
 	})
 

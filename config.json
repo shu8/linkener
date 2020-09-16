@@ -1,8 +1,12 @@
 {
     "store_type": "json",
-    "json_store_location": "urls.json",
-    "sqlite_store_location": "urls.db",
     "private_api": false,
     "port": 3000,
-    "auth_db_location": "auth.db"
+    "auth_db_location": "/var/lib/linkener/auth.db",
+    "auth_enabled": true,
+    "registration_enabled": true,
+    "api_root": "api",
+    "redirect_root": "",
+    "json_store_location": "/var/lib/linkener/urls.json",
+    "sqlite_store_location": "/var/lib/linkener/urls.db"
 }
