@@ -8,7 +8,6 @@ RUN apk add git build-base sqlite
 COPY . .
 RUN go mod download
 
-ENV CGO_ENABLED=0
 RUN go build -v ./... && go install ./...
 
 RUN ./setup.sh
