@@ -7,7 +7,7 @@ RUN apk add git build-base sqlite
 
 COPY . .
 RUN go mod download && go build -v ./... && go install ./...
-RUN ./setup.sh
+RUN chmod u+r+x setup.sh && ./setup.sh
 RUN mkdir -p /var/lib/linkener && mv auth.db /var/lib/linkener/
 RUN mkdir -p .linkener && mv config.json .linkener/
 
