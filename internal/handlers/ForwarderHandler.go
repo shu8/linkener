@@ -12,15 +12,26 @@ import (
 )
 
 type templateData struct {
-	Error   bool
+	Password bool
+	Unknown  bool
+	Error    bool
+	Expired  bool
+
+	PasswordIncorrect bool
+
 	Referer string
 }
+
+var tmpl = template.Must(template.New("passwordTemplate").Parse(static.PasswordTemplate))
 
 func redirect(w http.ResponseWriter, r *http.Request, store stores.Store, url *stores.ShortURL, referer string) {
 	// TODO add more stats like location?
 	err := store.RecordVisit(url.Slug, referer)
 	if err != nil {
 		println(err.Error())
+		tmpl.Execute(w, templateData{
+			Error: true,
+		})
 		http.Error(w, "Failed to unshorten URL", http.StatusInternalServerError)
 	}
 
@@ -34,7 +45,10 @@ func ForwarderHandler(w http.ResponseWriter, r *http.Request) {
 	store, err := stores.StoreFactory(config.Config.StoreType)
 	if err != nil {
 		println(err.Error())
-		http.Error(w, "Failed to unshorten URL", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		tmpl.Execute(w, templateData{
+			Error: true,
+		})
 		return
 	}
 
@@ -43,34 +57,44 @@ func ForwarderHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		println(err.Error())
-		http.Error(w, "Failed to unshorten URL", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		tmpl.Execute(w, templateData{
+			Error: true,
+		})
 		return
 	}
 
 	if url == nil {
-		http.Error(w, "Unknown URL", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		tmpl.Execute(w, templateData{
+			Unknown: true,
+		})
 		return
 	}
 
 	if url.AllowedVisits > 0 && len(url.Visits) >= url.AllowedVisits {
-		http.Error(w, "URL expired", http.StatusForbidden)
+		w.WriteHeader(http.StatusForbidden)
+		tmpl.Execute(w, templateData{
+			Expired: true,
+		})
 		return
 	}
 
 	if url.Password != "" {
-		tmpl := template.Must(template.New("passwordTemplate").Parse(static.PasswordTemplate))
 		if r.Method != http.MethodPost {
 			tmpl.Execute(w, templateData{
-				Error:   false,
-				Referer: r.Referer(),
+				Password:          true,
+				PasswordIncorrect: false,
+				Referer:           r.Referer(),
 			})
 		} else {
 			password := r.FormValue("password")
 			referer := r.FormValue("referer")
 			if bcrypt.CompareHashAndPassword([]byte(url.Password), []byte(password)) != nil {
 				tmpl.Execute(w, templateData{
-					Error:   true,
-					Referer: referer,
+					Password:          true,
+					PasswordIncorrect: true,
+					Referer:           referer,
 				})
 			} else {
 				redirect(w, r, store, url, referer)
